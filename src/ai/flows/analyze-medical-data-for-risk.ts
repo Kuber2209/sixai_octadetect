@@ -1,8 +1,8 @@
 'use server';
 /**
- * @fileOverview Analyzes medical images and clinical data to assess cancer risk by calling a Google Cloud Function.
+ * @fileOverview Analyzes medical images to assess cancer risk by calling a Google Cloud Function.
  *
- * - analyzeMedicalDataForRisk - A function that takes medical image and clinical data as input and returns a cancer risk assessment.
+ * - analyzeMedicalDataForRisk - A function that takes a medical image and patient name as input and returns a cancer risk assessment.
  * - AnalyzeMedicalDataForRiskInput - The input type for the analyzeMedicalDataForRisk function.
  * - AnalyzeMedicalDataForRiskOutput - The return type for the analyzeMedicalDataForRisk function.
  */
@@ -15,9 +15,7 @@ const AnalyzeMedicalDataForRiskInputSchema = z.object({
     .describe(
       "A medical image as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
-  age: z.number().describe("The patient's age."),
-  gender: z.string().describe("The patient's gender."),
-  smokingStatus: z.string().describe("The patient's smoking status."),
+  name: z.string().describe("The patient's name."),
 });
 export type AnalyzeMedicalDataForRiskInput = z.infer<typeof AnalyzeMedicalDataForRiskInputSchema>;
 
@@ -36,9 +34,7 @@ export async function analyzeMedicalDataForRisk(input: AnalyzeMedicalDataForRisk
   // The client-side code already converts the image to a Base64 data URI.
   // We can pass it directly in the payload.
   const payload = {
-    age: input.age,
-    gender: input.gender,
-    smokingStatus: input.smokingStatus,
+    name: input.name,
     image_base64: input.imageDataUri,
   };
 

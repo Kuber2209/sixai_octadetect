@@ -17,13 +17,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { ResultsDisplay } from "./results-display";
 import Image from "next/image";
@@ -32,9 +25,7 @@ const MAX_FILE_SIZE = 5000000; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png"];
 
 const formSchema = z.object({
-  age: z.coerce.number().min(1, "Age is required.").max(120, "Age must be between 1 and 120."),
-  gender: z.enum(["Male", "Female", "Other"], { required_error: "Gender is required."}),
-  smokingStatus: z.enum(["Never Smoked", "Former Smoker", "Current Smoker"], { required_error: "Smoking status is required." }),
+  name: z.string().min(1, "Patient name is required."),
   image: z
     .any()
     .refine((files) => files?.length == 1, "Image is required.")
@@ -57,7 +48,7 @@ export function AnalysisForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      age: undefined,
+      name: "",
     },
   });
 
@@ -76,9 +67,7 @@ export function AnalysisForm() {
       const imageDataUri = await toBase64(values.image[0]);
       const response = await analyzeMedicalDataForRisk({
         imageDataUri,
-        age: values.age,
-        gender: values.gender,
-        smokingStatus: values.smokingStatus,
+        name: values.name,
       });
       setResult(response);
     } catch (error) {
@@ -117,57 +106,13 @@ export function AnalysisForm() {
             <div className="space-y-6">
               <FormField
                 control={form.control}
-                name="age"
+                name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Patient Age</FormLabel>
+                    <FormLabel>Patient Name</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="e.g., 45" {...field} />
+                      <Input placeholder="e.g., John Doe" {...field} />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="gender"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Gender</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select gender" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Male">Male</SelectItem>
-                        <SelectItem value="Female">Female</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="smokingStatus"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Smoking Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select smoking status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Never Smoked">Never Smoked</SelectItem>
-                        <SelectItem value="Former Smoker">Former Smoker</SelectItem>
-                        <SelectItem value="Current Smoker">Current Smoker</SelectItem>
-                      </SelectContent>
-                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
