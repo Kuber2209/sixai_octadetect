@@ -43,12 +43,12 @@ const demoResults: AnalyzeMedicalDataForRiskOutput[] = [
     {
         riskAssessment: 'Medium Risk',
         confidenceScore: 0.76,
-        cancerType: 'Cervical Cancer',
+        cancerType: 'Oral Cancer',
     },
     {
         riskAssessment: 'Low Risk',
         confidenceScore: 0.98,
-        cancerType: 'Cervical Cancer',
+        cancerType: 'Oral Cancer',
     },
     {
         riskAssessment: 'High Risk',
