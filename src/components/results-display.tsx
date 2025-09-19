@@ -2,12 +2,28 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import type { AnalyzeMedicalDataForRiskOutput } from "@/ai/flows/analyze-medical-data-for-risk";
+import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
+import { AlertCircle } from "lucide-react";
 
 interface ResultsDisplayProps {
   result: AnalyzeMedicalDataForRiskOutput;
 }
 
 export function ResultsDisplay({ result }: ResultsDisplayProps) {
+
+  if (result.error) {
+    return (
+      <div className="mt-12 animate-in fade-in-50 duration-500">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Analysis Error</AlertTitle>
+          <AlertDescription>{result.error}</AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+
   const isHighRisk = result.riskAssessment.toLowerCase().includes("high");
   const confidenceValue = result.confidenceScore * 100;
 
