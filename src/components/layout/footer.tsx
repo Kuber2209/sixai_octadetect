@@ -25,10 +25,10 @@ export function Footer() {
         </div>
         <div className="text-sm text-muted-foreground">
           <a
-            href="mailto:contact@visionarycheck.com"
+            href="mailto:aumbawiskar@gmail.com"
             className="transition-colors hover:text-foreground"
           >
-            contact@visionarycheck.com
+            aumbawiskar@gmail.com
           </a>
         </div>
       </div>

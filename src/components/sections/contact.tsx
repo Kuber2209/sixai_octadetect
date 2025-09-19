@@ -13,10 +13,10 @@ export function Contact() {
           <p className="text-lg font-medium pt-4">
             Email:{" "}
             <a
-              href="mailto:contact@visionarycheck.com"
+              href="mailto:aumbawiskar@gmail.com"
               className="text-accent underline-offset-4 hover:underline"
             >
-              contact@visionarycheck.com
+              aumbawiskar@gmail.com
             </a>
           </p>
         </div>
