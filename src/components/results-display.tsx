@@ -25,7 +25,14 @@ export function ResultsDisplay({ result }: ResultsDisplayProps) {
 
 
   const isHighRisk = result.riskAssessment.toLowerCase().includes("high");
+  const isMediumRisk = result.riskAssessment.toLowerCase().includes("medium");
   const confidenceValue = result.confidenceScore * 100;
+
+  const getRiskVariant = () => {
+    if (isHighRisk) return "destructive";
+    if (isMediumRisk) return "secondary";
+    return "default";
+  }
 
   return (
     <div className="mt-12 animate-in fade-in-50 duration-500">
@@ -36,18 +43,31 @@ export function ResultsDisplay({ result }: ResultsDisplayProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6 text-center">
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-muted-foreground">
-              Risk Assessment
-            </p>
-            <Badge
-              variant={isHighRisk ? "destructive" : "default"}
-              className="text-xl px-4 py-1"
-            >
-              {result.riskAssessment}
-            </Badge>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">
+                Cancer Type
+              </p>
+              <Badge
+                variant="outline"
+                className="text-lg px-3 py-1"
+              >
+                {result.cancerType}
+              </Badge>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">
+                Risk Assessment
+              </p>
+              <Badge
+                variant={getRiskVariant()}
+                className="text-lg px-4 py-1"
+              >
+                {result.riskAssessment}
+              </Badge>
+            </div>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 pt-4">
             <p className="text-sm font-medium text-muted-foreground">
               Confidence Score
             </p>

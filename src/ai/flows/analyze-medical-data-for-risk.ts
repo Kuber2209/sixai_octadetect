@@ -23,6 +23,7 @@ export type AnalyzeMedicalDataForRiskInput = z.infer<typeof AnalyzeMedicalDataFo
 const AnalyzeMedicalDataForRiskOutputSchema = z.object({
   riskAssessment: z.string(),
   confidenceScore: z.number(),
+  cancerType: z.string(),
   error: z.string().optional(),
 });
 export type AnalyzeMedicalDataForRiskOutput = z.infer<typeof AnalyzeMedicalDataForRiskOutputSchema>;
@@ -32,18 +33,32 @@ const demoResults: AnalyzeMedicalDataForRiskOutput[] = [
     {
         riskAssessment: 'Low Risk',
         confidenceScore: 0.92,
+        cancerType: 'Oral Cancer',
     },
     {
         riskAssessment: 'High Risk',
         confidenceScore: 0.85,
+        cancerType: 'Oral Cancer',
     },
     {
         riskAssessment: 'Medium Risk',
         confidenceScore: 0.76,
+        cancerType: 'Cervical Cancer',
     },
     {
         riskAssessment: 'Low Risk',
         confidenceScore: 0.98,
+        cancerType: 'Cervical Cancer',
+    },
+    {
+        riskAssessment: 'High Risk',
+        confidenceScore: 0.91,
+        cancerType: 'Oral Cancer',
+    },
+    {
+        riskAssessment: 'Medium Risk',
+        confidenceScore: 0.68,
+        cancerType: 'Oral Cancer',
     }
 ];
 
