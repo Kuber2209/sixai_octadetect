@@ -1,3 +1,10 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero-medical-ai",
+      "description": "Abstract medical technology background with a doctor looking at a screen.",
+      "imageUrl": "https://picsum.photos/seed/hero-medical-ai/1200/800",
+      "imageHint": "medical technology"
+    }
+  ]
 }
