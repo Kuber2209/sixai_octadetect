@@ -2,9 +2,9 @@
   "placeholderImages": [
     {
       "id": "hero-medical-ai",
-      "description": "Abstract medical technology background with a doctor looking at a screen.",
-      "imageUrl": "https://picsum.photos/seed/hero-medical-ai/1200/800",
-      "imageHint": "medical technology"
+      "description": "An abstract image representing AI in the medical field, with glowing neural network patterns over a microscopic view of cells.",
+      "imageUrl": "https://picsum.photos/seed/cancer-research/1200/800",
+      "imageHint": "cancer research"
     }
   ]
 }
