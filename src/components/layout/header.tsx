@@ -15,7 +15,7 @@ export function Header() {
         <Link href="#home" className="flex items-center gap-2">
           <Stethoscope className="h-6 w-6 text-primary" />
           <span className="font-bold font-headline text-lg hidden sm:inline-block">
-            OncoAI
+            OncoDetect AI
           </span>
         </Link>
         <nav className="flex items-center gap-4 md:gap-6 text-sm font-medium">

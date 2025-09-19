@@ -3,7 +3,7 @@ import { Toaster } from '@/components/ui/toaster';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'OncoAI',
+  title: 'OncoDetect AI',
   description: 'AI-Powered Early Cancer Detection',
 };
 
