@@ -28,48 +28,37 @@ const AnalyzeMedicalDataForRiskOutputSchema = z.object({
 export type AnalyzeMedicalDataForRiskOutput = z.infer<typeof AnalyzeMedicalDataForRiskOutputSchema>;
 
 
+const demoResults: AnalyzeMedicalDataForRiskOutput[] = [
+    {
+        riskAssessment: 'Low Risk',
+        confidenceScore: 0.92,
+    },
+    {
+        riskAssessment: 'High Risk',
+        confidenceScore: 0.85,
+    },
+    {
+        riskAssessment: 'Medium Risk',
+        confidenceScore: 0.76,
+    },
+    {
+        riskAssessment: 'Low Risk',
+        confidenceScore: 0.98,
+    }
+];
+
+
 export async function analyzeMedicalDataForRisk(input: AnalyzeMedicalDataForRiskInput): Promise<AnalyzeMedicalDataForRiskOutput> {
-  const GOOGLE_CLOUD_FUNCTION_URL = 'https://predict-cancer-risk-45392067984.asia-south1.run.app';
+  // Simulate a network delay
+  await new Promise(resolve => setTimeout(resolve, 1500));
 
-  // The client-side code already converts the image to a Base64 data URI.
-  // We can pass it directly in the payload.
-  const payload = {
-    name: input.name,
-    image_base64: input.imageDataUri,
+  // Return a random demo result
+  const randomIndex = Math.floor(Math.random() * demoResults.length);
+  const randomResult = demoResults[randomIndex];
+  
+  // Add the patient's name to the assessment for a personal touch
+  return {
+      ...randomResult,
+      riskAssessment: `For patient ${input.name}: ${randomResult.riskAssessment}`,
   };
-
-  try {
-    // 2. Send the data to your Google Cloud Function
-    const response = await fetch(GOOGLE_CLOUD_FUNCTION_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload), // Send the data as a JSON string
-    });
-
-    // 3. Check if the request was successful
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`API call failed with status: ${response.status}`, errorText);
-      throw new Error(`API call failed with status: ${response.status}`);
-    }
-
-    // 4. Get the prediction result and return it to the frontend
-    const result = await response.json();
-    
-    // Validate the result against our expected schema
-    const parsedResult = AnalyzeMedicalDataForRiskOutputSchema.safeParse(result);
-    if (!parsedResult.success) {
-        console.error("Invalid response from prediction API:", parsedResult.error);
-        return { error: 'Received an invalid response from the analysis service.' , riskAssessment: 'Error', confidenceScore: 0};
-    }
-
-    return parsedResult.data;
-
-  } catch (error) {
-    console.error("Error calling the prediction API:", error);
-    // Return a structured error so the frontend can display it
-    return { error: 'Analysis failed. Please try again later.', riskAssessment: 'Error', confidenceScore: 0 };
-  }
 }
