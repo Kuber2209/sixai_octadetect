@@ -9,7 +9,6 @@
 
 import { z } from 'genkit';
 import {
-  v1,
   PredictionServiceClient,
 } from '@google-cloud/aiplatform';
 
@@ -52,7 +51,7 @@ export async function predictCancerRisk(
     apiEndpoint: `${location}-aiplatform.googleapis.com`,
   };
 
-  const predictionServiceClient = new PredictionServiceClient(clientOptions).getPredictionServiceClient();
+  const predictionServiceClient = new PredictionServiceClient(clientOptions);
   const endpoint = `projects/${project}/locations/${location}/endpoints/${endpointId}`;
   
   const imageBase64 = imageDataUri.split(';base64,').pop();
