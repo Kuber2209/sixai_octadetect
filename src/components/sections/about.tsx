@@ -16,13 +16,6 @@ export function About() {
             healthcare professionals and patients to make informed decisions and
             improve outcomes.
           </p>
-          <p className="text-muted-foreground md:text-xl/relaxed">
-            Our team comprises dedicated engineers, data scientists, and medical
-            advisors committed to pushing the boundaries of what's possible in
-            medical diagnostics. We believe that technology can be a powerful
-            ally in the fight against cancer, and early detection is the key to
-            a better future.
-          </p>
         </div>
       </div>
     </section>
