@@ -8,42 +8,8 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {defineModel, modelRef} from 'genkit';
+import {vertexAI} from '@genkit-ai/vertexai';
 import {z} from 'genkit';
-
-const BUCKET_NAME = 'oncodetect-ai-models';
-
-// Define a reference to the custom-trained model hosted on Google Cloud Storage.
-// Genkit will manage deploying this to a Vertex AI Endpoint.
-const cancerModel = defineModel(
-  {
-    name: 'vertexai/custom-oral-cancer-model',
-    label: 'Oral Cancer Detection Model',
-    config: {
-      type: 'tensorflow',
-      modelUri: `gs://${BUCKET_NAME}/oral_cancer_model.h5`,
-    },
-  },
-  async (input) => {
-    // This is the model's prediction logic.
-    // It will be executed on Google's infrastructure.
-    const model = modelRef({name: 'vertexai/custom-oral-cancer-model'});
-    const {output} = await ai.generate({
-      model,
-      prompt: {
-        // The input schema for the TF model is just the image.
-        // The actual name of the input tensor in the model is 'image'.
-        image: input.image,
-      },
-    });
-
-    return {
-      // The model output is an array of probabilities.
-      // We need to find the highest probability and its index.
-      predictions: output as number[],
-    };
-  }
-);
 
 // Define the input schema for our flow
 const PredictCancerRiskInputSchema = z.object({
@@ -70,7 +36,7 @@ export type PredictCancerRiskOutput = z.infer<typeof PredictCancerRiskOutputSche
 export async function predictCancerRisk(input: PredictCancerRiskInput): Promise<PredictCancerRiskOutput> {
   try {
     const { output } = await ai.generate({
-        model: cancerModel,
+        model: vertexAI.model('custom-oral-cancer-model'),
         prompt: {
             image: input.imageDataUri,
         },
@@ -80,7 +46,15 @@ export async function predictCancerRisk(input: PredictCancerRiskInput): Promise<
         throw new Error('Invalid model output from Vertex AI.');
     }
     
-    const predictions = output as number[];
+    // The output from a custom model prediction is often a structure.
+    // We need to access the 'predictions' key which contains the array of probabilities.
+    const rawPredictions = (output as any).predictions;
+    
+    if (!rawPredictions || !Array.isArray(rawPredictions) || rawPredictions.length === 0) {
+      throw new Error('Invalid prediction format in model output.');
+    }
+
+    const predictions = rawPredictions[0] as number[];
     const confidenceScore = Math.max(...predictions);
     const predictedClassIndex = predictions.indexOf(confidenceScore);
     
