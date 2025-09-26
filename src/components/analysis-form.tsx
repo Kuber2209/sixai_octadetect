@@ -39,9 +39,11 @@ export type PredictCancerRiskOutput = {
 const MAX_FILE_SIZE = 5000000; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png"];
 const CANCER_TYPES = ["Oral Cancer", "Cervical Cancer"];
+const IMAGE_TYPES = ["Clinical", "Clinical and Radiograph", "Histopathology", "Radiograph"];
 
 const formSchema = z.object({
   cancerType: z.string().min(1, "Please select a cancer type."),
+  imageType: z.string().min(1, "Please select an image type."),
   image: z
     .any()
     .refine((files) => files?.length == 1, "Image is required.")
@@ -65,6 +67,7 @@ export function AnalysisForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       cancerType: "Oral Cancer",
+      imageType: "Radiograph",
       image: undefined,
     },
   });
@@ -90,6 +93,7 @@ export function AnalysisForm() {
         },
         body: JSON.stringify({ 
           imageDataUri: imageDataUri,
+          imageType: values.imageType, // Pass the new imageType
         }),
       });
 
@@ -120,18 +124,20 @@ export function AnalysisForm() {
     }
   }
   
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, fieldChange: (files: FileList | null) => void) => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Set the file in the form state
+      form.setValue('image', e.target.files, { shouldValidate: true });
+      // Create and set the image preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
-      fieldChange(e.target.files);
     } else {
+      form.setValue('image', null, { shouldValidate: true });
       setImagePreview(null);
-      fieldChange(null);
     }
   };
 
@@ -139,29 +145,53 @@ export function AnalysisForm() {
     <>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <FormField
-            control={form.control}
-            name="cancerType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Cancer Type</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value} disabled>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a cancer type to analyze" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {CANCER_TYPES.map((type) => (
-                      <SelectItem key={type} value={type}>{type}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                 <p className="text-xs text-muted-foreground pt-1">Currently, only Oral Cancer analysis is supported.</p>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="cancerType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Cancer Type</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a cancer type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {CANCER_TYPES.map((type) => (
+                          <SelectItem key={type} value={type}>{type}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="imageType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Image Type</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select an image type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {IMAGE_TYPES.map((type) => (
+                          <SelectItem key={type} value={type}>{type}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+           </div>
+           <p className="text-xs text-center text-muted-foreground -mt-2">Currently, only Oral Cancer analysis is supported.</p>
           <FormField
             control={form.control}
             name="image"
@@ -174,7 +204,7 @@ export function AnalysisForm() {
                       type="file"
                       className="absolute w-full h-full opacity-0 cursor-pointer"
                       accept={ACCEPTED_IMAGE_TYPES.join(",")}
-                      onChange={(e) => handleImageChange(e, field.onChange)}
+                      onChange={handleImageChange}
                       onBlur={field.onBlur}
                       name={field.name}
                       ref={field.ref}

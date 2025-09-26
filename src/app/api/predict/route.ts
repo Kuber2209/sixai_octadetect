@@ -13,11 +13,11 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { imageDataUri } = body;
+    const { imageDataUri, imageType } = body; // Destructure both fields
 
-    if (!imageDataUri) {
+    if (!imageDataUri || !imageType) {
       return NextResponse.json(
-        { error: 'Invalid request payload. Missing "imageDataUri".' },
+        { error: 'Invalid request payload. Missing "imageDataUri" or "imageType".' },
         { status: 400 }
       );
     }
@@ -28,7 +28,10 @@ export async function POST(request: Request) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ imageDataUri: imageDataUri }),
+      body: JSON.stringify({ 
+        imageDataUri: imageDataUri,
+        imageType: imageType // Pass both fields to the backend
+      }),
     });
 
     if (!pythonBackendResponse.ok) {
