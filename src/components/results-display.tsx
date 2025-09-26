@@ -1,9 +1,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import type { PredictCancerRiskOutput } from "@/ai/flows/predict-cancer-risk";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { AlertCircle } from "lucide-react";
+
+// This type should match the expected output from your API route
+export type PredictCancerRiskOutput = {
+  riskAssessment: string;
+  confidenceScore: number;
+  cancerType: string;
+  error?: string;
+};
 
 interface ResultsDisplayProps {
   result: PredictCancerRiskOutput;

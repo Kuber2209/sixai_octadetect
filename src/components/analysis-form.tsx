@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader2, Upload } from "lucide-react";
-import { predictCancerRisk, PredictCancerRiskOutput } from "@/ai/flows/predict-cancer-risk";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +26,15 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { ResultsDisplay } from "./results-display";
 import Image from "next/image";
+
+// This type should match the expected output from your new API route
+export type PredictCancerRiskOutput = {
+  riskAssessment: string;
+  confidenceScore: number;
+  cancerType: string;
+  error?: string;
+};
+
 
 const MAX_FILE_SIZE = 5000000; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png"];
@@ -73,24 +81,39 @@ export function AnalysisForm() {
     setResult(null);
     try {
       const imageDataUri = await toBase64(values.image[0]);
-      const response = await predictCancerRisk({
-        imageDataUri,
-        cancerType: values.cancerType,
+      
+      const response = await fetch('/api/predict', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          imageDataUri,
+          cancerType: values.cancerType,
+        }),
       });
-      setResult(response);
-      if (response.error) {
+
+      const responseData: PredictCancerRiskOutput = await response.json();
+
+      if (!response.ok || responseData.error) {
          toast({
           variant: "destructive",
           title: "Analysis Failed",
-          description: response.error,
+          description: responseData.error || "An unknown error occurred.",
         });
+        setResult(responseData); // Still set result to show error in results-display
+      } else {
+        // Add cancerType to the result as it's not returned from the python function
+        setResult({ ...responseData, cancerType: values.cancerType });
       }
+
     } catch (error) {
       console.error("Analysis failed:", error);
+      const errorMessage = error instanceof Error ? error.message : "Something went wrong. Please try again.";
       toast({
         variant: "destructive",
         title: "Analysis Failed",
-        description: "Something went wrong. Please try again.",
+        description: errorMessage,
       });
     } finally {
       setIsLoading(false);
