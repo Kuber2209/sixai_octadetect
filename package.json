@@ -12,7 +12,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@google-cloud/aiplatform": "^3.9.0",
     "@genkit-ai/googleai": "^1.19.3",
     "@genkit-ai/next": "^1.19.3",
     "@genkit-ai/vertexai": "^1.19.3",

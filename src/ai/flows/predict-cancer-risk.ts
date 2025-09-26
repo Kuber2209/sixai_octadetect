@@ -7,11 +7,8 @@
  * - PredictCancerRiskOutput - The return type for the predictCancerRisk function.
  */
 
-import { z } from 'genkit';
-import {
-  PredictionServiceClient,
-  helpers,
-} from '@google-cloud/aiplatform';
+import {ai} from '@/ai/genkit';
+import {z} from 'genkit';
 
 // Define the input schema for our flow
 const PredictCancerRiskInputSchema = z.object({
@@ -41,55 +38,27 @@ export type PredictCancerRiskOutput = z.infer<
 export async function predictCancerRisk(
   input: PredictCancerRiskInput
 ): Promise<PredictCancerRiskOutput> {
-  const { imageDataUri, cancerType } = input;
-  
-  // Configuration for the Vertex AI endpoint
-  const project = process.env.GCLOUD_PROJECT || 'oncodetect-ai';
-  const location = 'us-central1';
-  const endpointId = '5381831701358313472'; // Your specific endpoint ID for the model
-
-  const clientOptions = {
-    apiEndpoint: `${location}-aiplatform.googleapis.com`,
-  };
-
-  const predictionServiceClient = new PredictionServiceClient(clientOptions);
-  const endpoint = `projects/${project}/locations/${location}/endpoints/${endpointId}`;
-  
-  const imageBase64 = imageDataUri.split(';base64,').pop();
-
-  const instance = helpers.toValue({
-    content: imageBase64,
-  });
-  
-  if (!instance) {
-     return {
-      riskAssessment: '',
-      confidenceScore: 0,
-      cancerType: cancerType,
-      error: 'Failed to create instance for Vertex AI model.',
-    };
-  }
-  
-  const instances = [instance];
-  const request = {
-    endpoint,
-    instances,
-  };
+  const {imageDataUri, cancerType} = input;
 
   try {
-    const [response] = await predictionServiceClient.predict(request);
-    
-    if (!response.predictions || response.predictions.length === 0) {
-      throw new Error('Invalid response from Vertex AI: No predictions found.');
+    const {output} = await ai.generate({
+      model: 'vertexai/custom-oral-cancer-model',
+      prompt: {
+        media: {url: imageDataUri},
+      },
+    });
+
+    const predictionResult = output as any;
+
+    if (
+      !predictionResult ||
+      !predictionResult.confidences ||
+      !predictionResult.displayNames
+    ) {
+      console.error('Invalid prediction result structure:', predictionResult);
+      throw new Error('Invalid prediction result structure from Vertex AI.');
     }
 
-    const predictionResult = helpers.fromValue(response.predictions[0]);
-    
-    if (!predictionResult || !('confidences' in predictionResult) || !('displayNames' in predictionResult)) {
-        console.error('Invalid prediction result structure:', predictionResult);
-        throw new Error('Invalid prediction result structure from Vertex AI.');
-    }
-    
     // The structure can be { confidences: [0.1, 0.9], displayNames: ["Low", "High"] }
     // We find the index of the max confidence and map it to the risk assessment
     const confidences = predictionResult.confidences as number[];
@@ -105,7 +74,7 @@ export async function predictCancerRisk(
       cancerType: cancerType,
     };
   } catch (e: any) {
-    console.error('Error in predictCancerRisk flow (Vertex AI SDK):', e);
+    console.error('Error in predictCancerRisk flow (Genkit):', e);
     // Return a more user-friendly error
     return {
       riskAssessment: '',
