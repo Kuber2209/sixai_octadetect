@@ -19,7 +19,6 @@ const AnalyzeMedicalDataForRiskInputSchema = z.object({
 });
 export type AnalyzeMedicalDataForRiskInput = z.infer<typeof AnalyzeMedicalDataForRiskInputSchema>;
 
-// The output from your Google Cloud function is expected to match this shape.
 const AnalyzeMedicalDataForRiskOutputSchema = z.object({
   riskAssessment: z.string(),
   confidenceScore: z.number(),
@@ -29,51 +28,42 @@ const AnalyzeMedicalDataForRiskOutputSchema = z.object({
 export type AnalyzeMedicalDataForRiskOutput = z.infer<typeof AnalyzeMedicalDataForRiskOutputSchema>;
 
 
-const demoResults: AnalyzeMedicalDataForRiskOutput[] = [
-    {
-        riskAssessment: 'Low Risk',
-        confidenceScore: 0.92,
-        cancerType: 'Oral Cancer',
-    },
-    {
-        riskAssessment: 'High Risk',
-        confidenceScore: 0.85,
-        cancerType: 'Oral Cancer',
-    },
-    {
-        riskAssessment: 'Medium Risk',
-        confidenceScore: 0.76,
-        cancerType: 'Oral Cancer',
-    },
-    {
-        riskAssessment: 'Low Risk',
-        confidenceScore: 0.98,
-        cancerType: 'Oral Cancer',
-    },
-    {
-        riskAssessment: 'High Risk',
-        confidenceScore: 0.91,
-        cancerType: 'Oral Cancer',
-    },
-    {
-        riskAssessment: 'Medium Risk',
-        confidenceScore: 0.68,
-        cancerType: 'Oral Cancer',
-    }
-];
-
+// The URL of your deployed Google Cloud Function.
+const CLOUD_FUNCTION_URL = 'https://predict-cancer-risk-45392067984.asia-south1.run.app';
 
 export async function analyzeMedicalDataForRisk(input: AnalyzeMedicalDataForRiskInput): Promise<AnalyzeMedicalDataForRiskOutput> {
-  // Simulate a network delay
-  await new Promise(resolve => setTimeout(resolve, 1500));
+  try {
+    const response = await fetch(CLOUD_FUNCTION_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        imageDataUri: input.imageDataUri,
+        name: input.name,
+      }),
+    });
 
-  // Return a random demo result
-  const randomIndex = Math.floor(Math.random() * demoResults.length);
-  const randomResult = demoResults[randomIndex];
-  
-  // Add the patient's name to the assessment for a personal touch
-  return {
-      ...randomResult,
-      riskAssessment: `For patient ${input.name}: ${randomResult.riskAssessment}`,
-  };
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Cloud Function error:', errorData);
+      return {
+        riskAssessment: '',
+        confidenceScore: 0,
+        cancerType: '',
+        error: `Analysis failed: ${errorData.error || 'The model could not be reached.'}`,
+      };
+    }
+
+    const result = await response.json();
+    return result as AnalyzeMedicalDataForRiskOutput;
+  } catch (error) {
+    console.error('Error calling Cloud Function:', error);
+    return {
+      riskAssessment: '',
+      confidenceScore: 0,
+      cancerType: '',
+      error: 'An unexpected error occurred while contacting the analysis service.',
+    };
+  }
 }
