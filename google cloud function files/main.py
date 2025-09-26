@@ -10,17 +10,32 @@ from google.cloud import storage
 
 # --- Configuration ---
 # Hardcoded bucket and model file path to ensure correctness.
-BUCKET_NAME = "sixai-cancer-models"
-MODEL_FILE_PATH = "oral_cervical_cancer_model.h5"
+# The full gs:// path is provided here.
+MODEL_FULL_PATH = "gs://sixai-cancer-models/oral_cervical_cancer_model.h5"
 # --------------------
 
 # This is a global variable to hold the model.
 # It's loaded once per function instance to be reused across invocations.
 model = None
 
-def download_model_from_gcs(bucket_name, model_path):
-    """Downloads the model from GCS to a temporary local file."""
+def download_model_from_gcs(full_gcs_path):
+    """Downloads the model from a full GCS path to a temporary local file."""
     try:
+        # The full path is in the format "gs://<bucket-name>/<path-to-file>"
+        # We need to parse the bucket name and the file path from this string.
+        if not full_gcs_path.startswith("gs://"):
+            raise ValueError("Invalid GCS path. Must start with 'gs://'.")
+        
+        # Remove the "gs://" prefix
+        path_without_prefix = full_gcs_path[5:]
+        # Split the path into bucket and blob name
+        parts = path_without_prefix.split("/", 1)
+        if len(parts) < 2:
+            raise ValueError("Invalid GCS path format. Must be 'gs://<bucket>/<file>'.")
+        
+        bucket_name = parts[0]
+        model_path = parts[1]
+
         storage_client = storage.Client()
         bucket = storage_client.bucket(bucket_name)
         blob = bucket.blob(model_path)
@@ -28,7 +43,7 @@ def download_model_from_gcs(bucket_name, model_path):
         # Using /tmp/ is the standard location for temporary files in Cloud Functions
         local_model_path = f"/tmp/{os.path.basename(model_path)}"
         
-        print(f"Downloading model gs://{bucket_name}/{model_path} to {local_model_path}")
+        print(f"Downloading model {full_gcs_path} to {local_model_path}")
         blob.download_to_filename(local_model_path)
         print("Model downloaded successfully.")
         return local_model_path
@@ -42,8 +57,8 @@ def load_model():
     global model
     if model is None:
         try:
-            # Download the model first
-            local_path = download_model_from_gcs(BUCKET_NAME, MODEL_FILE_PATH)
+            # Download the model first using the full path
+            local_path = download_model_from_gcs(MODEL_FULL_PATH)
             # Load the model from the local temporary path
             print("Loading model into memory...")
             model = tf.keras.models.load_model(local_path, compile=False)
