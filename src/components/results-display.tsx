@@ -17,7 +17,12 @@ export function ResultsDisplay({ result }: ResultsDisplayProps) {
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Analysis Error</AlertTitle>
-          <AlertDescription>{result.error}</AlertDescription>
+          <AlertDescription>
+            <p className="font-semibold mb-2">The analysis could not be completed. Here is the technical reason:</p>
+            <pre className="text-xs whitespace-pre-wrap bg-destructive-foreground/10 p-2 rounded-md font-mono">
+              {result.error}
+            </pre>
+          </AlertDescription>
         </Alert>
       </div>
     );

@@ -85,6 +85,11 @@ export async function predictCancerRisk(
 
     const predictionResult = helpers.fromValue(response.predictions[0]);
     
+    if (!predictionResult || !('confidences' in predictionResult) || !('displayNames' in predictionResult)) {
+        console.error('Invalid prediction result structure:', predictionResult);
+        throw new Error('Invalid prediction result structure from Vertex AI.');
+    }
+    
     // The structure can be { confidences: [0.1, 0.9], displayNames: ["Low", "High"] }
     // We find the index of the max confidence and map it to the risk assessment
     const confidences = predictionResult.confidences as number[];
@@ -101,12 +106,12 @@ export async function predictCancerRisk(
     };
   } catch (e: any) {
     console.error('Error in predictCancerRisk flow (Vertex AI SDK):', e);
+    // Return the specific error message for foolproof troubleshooting
     return {
       riskAssessment: '',
       confidenceScore: 0,
       cancerType: cancerType,
-      error:
-        'Analysis failed: The AI model could not be reached or returned an error.',
+      error: `Analysis failed. Backend error: ${e.message || 'An unknown error occurred.'}`,
     };
   }
 }
