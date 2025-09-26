@@ -37,13 +37,13 @@ export async function predictCancerRisk(input: PredictCancerRiskInput): Promise<
   try {
     const { output } = await ai.generate({
         model: vertexAI.model('custom-oral-cancer-model'),
-        prompt: {
-            image: input.imageDataUri,
-        },
+        prompt: [
+          { media: { url: input.imageDataUri } }
+        ]
     });
 
-    if (!output || !Array.isArray(output) || output.length === 0) {
-        throw new Error('Invalid model output from Vertex AI.');
+    if (!output || typeof output !== 'object') {
+        throw new Error('Invalid model output from Vertex AI. Expected an object.');
     }
     
     // The output from a custom model prediction is often a structure.
