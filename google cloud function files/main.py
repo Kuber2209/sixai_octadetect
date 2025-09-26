@@ -56,6 +56,7 @@ def load_model():
     global model
     if model is None:
         try:
+            # Hardcode the full path to the model for reliability
             full_model_path = f"gs://{BUCKET_NAME}/{MODEL_FILE}"
             local_path = download_model_from_gcs(full_model_path)
             print("Loading model into memory...")
@@ -63,20 +64,31 @@ def load_model():
             print("Model loaded successfully.")
         except Exception as e:
             print(f"CRITICAL: Failed to load model. Error: {e}")
-            model = None
+            model = None # Ensure model is None if loading fails
 
+# Load the model during the cold start
 load_model()
 
 @functions_framework.http
 def predict(request):
     """HTTP Cloud Function for prediction."""
-    headers = {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
-    }
+    # Set CORS headers for the preflight request
     if request.method == 'OPTIONS':
+        # Allows GET requests from any origin with the Content-Type
+        # header and caches preflight response for an 3600s
+        headers = {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type',
+            'Access-Control-Max-Age': '3600'
+        }
+
         return ('', 204, headers)
+
+    # Set CORS headers for the main request
+    headers = {
+        'Access-Control-Allow-Origin': '*'
+    }
 
     if not model:
         print("Error: Model is not loaded. Cannot process prediction.")
@@ -122,5 +134,3 @@ def predict(request):
     except Exception as e:
         print(f"Prediction error: {e}")
         return ({'error': f'An unexpected error occurred during prediction: {e}'}, 500, headers)
-
-    
