@@ -64,7 +64,7 @@ export function AnalysisForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      cancerType: "",
+      cancerType: "Oral Cancer",
     },
   });
 
@@ -88,8 +88,7 @@ export function AnalysisForm() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          imageDataUri,
-          cancerType: values.cancerType,
+          imageDataUri: imageDataUri,
         }),
       });
 
@@ -146,7 +145,7 @@ export function AnalysisForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Cancer Type</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} defaultValue={field.value} disabled>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a cancer type to analyze" />
@@ -158,6 +157,7 @@ export function AnalysisForm() {
                     ))}
                   </SelectContent>
                 </Select>
+                 <p className="text-xs text-muted-foreground pt-1">Currently, only Oral Cancer analysis is supported.</p>
                 <FormMessage />
               </FormItem>
             )}

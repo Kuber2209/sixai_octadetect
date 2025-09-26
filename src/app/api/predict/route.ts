@@ -28,14 +28,27 @@ export async function POST(request: Request) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ imageDataUri }),
+      body: JSON.stringify({ imageDataUri: imageDataUri }),
     });
 
     if (!pythonBackendResponse.ok) {
       const errorBody = await pythonBackendResponse.text();
       console.error('Error from Python backend:', errorBody);
+      // Try to parse the error from the python function
+      let errorMessage = `Error from prediction service: ${pythonBackendResponse.statusText}`;
+      try {
+        const errorJson = JSON.parse(errorBody);
+        if (errorJson.error) {
+          errorMessage = errorJson.error;
+        }
+      } catch (e) {
+        // Not a json error, use the text body if it's not too long
+        if (errorBody.length < 500) {
+           errorMessage = errorBody;
+        }
+      }
       return NextResponse.json(
-        { error: `Error from prediction service: ${pythonBackendResponse.statusText}` },
+        { error: errorMessage },
         { status: pythonBackendResponse.status }
       );
     }
