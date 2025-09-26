@@ -25,7 +25,6 @@ const MAX_FILE_SIZE = 5000000; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png"];
 
 const formSchema = z.object({
-  name: z.string().min(1, "Patient name is required."),
   image: z
     .any()
     .refine((files) => files?.length == 1, "Image is required.")
@@ -47,9 +46,7 @@ export function AnalysisForm() {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-    },
+    defaultValues: {},
   });
 
   const toBase64 = (file: File): Promise<string> =>
@@ -67,7 +64,7 @@ export function AnalysisForm() {
       const imageDataUri = await toBase64(values.image[0]);
       const response = await analyzeMedicalDataForRisk({
         imageDataUri,
-        name: values.name,
+        name: "Patient", // Name is no longer used in the backend but the flow expects it.
       });
       setResult(response);
     } catch (error) {
@@ -102,52 +99,35 @@ export function AnalysisForm() {
     <>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          <div className="grid md:grid-cols-2 gap-8 items-start">
-            <div className="space-y-6">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Patient Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., John Doe" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <FormField
-              control={form.control}
-              name="image"
-              render={() => (
-                <FormItem>
-                  <FormLabel>Medical Image</FormLabel>
-                  <FormControl>
-                    <label className="relative flex justify-center items-center w-full h-56 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
-                      <Input
-                        type="file"
-                        className="absolute w-full h-full opacity-0 cursor-pointer"
-                        accept={ACCEPTED_IMAGE_TYPES.join(",")}
-                        onChange={handleImageChange}
-                      />
-                      {imagePreview ? (
-                        <Image src={imagePreview} alt="Image preview" fill style={{objectFit: 'contain'}} className="rounded-lg p-2" />
-                      ) : (
-                        <div className="flex flex-col items-center justify-center text-muted-foreground text-center p-4">
-                          <Upload className="w-10 h-10 mb-2" />
-                          <p className="text-sm font-semibold">Click to upload or drag & drop</p>
-                          <p className="text-xs">JPG, PNG, JPEG (MAX. 5MB)</p>
-                        </div>
-                      )}
-                    </label>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+          <FormField
+            control={form.control}
+            name="image"
+            render={() => (
+              <FormItem>
+                <FormLabel>Medical Image</FormLabel>
+                <FormControl>
+                  <label className="relative flex justify-center items-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                    <Input
+                      type="file"
+                      className="absolute w-full h-full opacity-0 cursor-pointer"
+                      accept={ACCEPTED_IMAGE_TYPES.join(",")}
+                      onChange={handleImageChange}
+                    />
+                    {imagePreview ? (
+                      <Image src={imagePreview} alt="Image preview" fill style={{objectFit: 'contain'}} className="rounded-lg p-2" />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center text-muted-foreground text-center p-4">
+                        <Upload className="w-10 h-10 mb-2" />
+                        <p className="text-sm font-semibold">Click to upload or drag & drop</p>
+                        <p className="text-xs">JPG, PNG, JPEG (MAX. 5MB)</p>
+                      </div>
+                    )}
+                  </label>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <Button type="submit" size="lg" className="w-full" disabled={isLoading}>
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Analyze

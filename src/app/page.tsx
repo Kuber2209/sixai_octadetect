@@ -23,11 +23,10 @@ export default function Home() {
             <Card className="max-w-4xl mx-auto shadow-lg">
               <CardHeader className="text-center">
                 <CardTitle className="text-3xl font-headline tracking-tight sm:text-4xl">
-                  Analyze Patient Data
+                  Analyze Medical Image
                 </CardTitle>
                 <CardDescription className="text-md">
-                  Upload a medical image and fill in the clinical data to get an
-                  AI-powered risk assessment.
+                  Upload a medical image to get an AI-powered risk assessment.
                 </CardDescription>
               </CardHeader>
               <CardContent>
