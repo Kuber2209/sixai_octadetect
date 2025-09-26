@@ -37,7 +37,7 @@ export type PredictCancerRiskOutput = {
 
 
 const MAX_FILE_SIZE = 5000000; // 5MB
-const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png"];
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg"];
 const CANCER_TYPES = ["Oral Cancer", "Cervical Cancer"];
 const IMAGE_TYPES = ["Clinical", "Clinical and Radiograph", "Histopathology", "Radiograph"];
 
@@ -53,7 +53,7 @@ const formSchema = z.object({
     )
     .refine(
       (files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
-      ".jpg, .jpeg, and .png files are accepted."
+      "Only .jpeg files are accepted."
     ),
 });
 
@@ -216,7 +216,7 @@ export function AnalysisForm() {
                       <div className="flex flex-col items-center justify-center text-muted-foreground text-center p-4">
                         <Upload className="w-10 h-10 mb-2" />
                         <p className="text-sm font-semibold">Click to upload or drag & drop</p>
-                        <p className="text-xs">JPG, PNG, JPEG (MAX. 5MB)</p>
+                        <p className="text-xs">JPEG only (MAX. 5MB)</p>
                       </div>
                     )}
                   </label>
