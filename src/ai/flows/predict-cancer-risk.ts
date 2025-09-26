@@ -7,9 +7,11 @@
  * - PredictCancerRiskOutput - The return type for the predictCancerRisk function.
  */
 
-import {ai} from '@/ai/genkit';
-import {vertexAI} from '@genkit-ai/vertexai';
-import {z} from 'genkit';
+import { z } from 'genkit';
+import {
+  v1,
+  PredictionServiceClient,
+} from '@google-cloud/aiplatform';
 
 // Define the input schema for our flow
 const PredictCancerRiskInputSchema = z.object({
@@ -18,7 +20,9 @@ const PredictCancerRiskInputSchema = z.object({
     .describe(
       "A medical image as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
-  cancerType: z.string().describe('The type of cancer to analyze for, e.g., "Oral Cancer".'),
+  cancerType: z
+    .string()
+    .describe('The type of cancer to analyze for, e.g., "Oral Cancer".'),
 });
 export type PredictCancerRiskInput = z.infer<typeof PredictCancerRiskInputSchema>;
 
@@ -29,50 +33,70 @@ const PredictCancerRiskOutputSchema = z.object({
   cancerType: z.string(),
   error: z.string().optional(),
 });
-export type PredictCancerRiskOutput = z.infer<typeof PredictCancerRiskOutputSchema>;
-
+export type PredictCancerRiskOutput = z.infer<
+  typeof PredictCancerRiskOutputSchema
+>;
 
 // This is the main flow function that the frontend will call.
-export async function predictCancerRisk(input: PredictCancerRiskInput): Promise<PredictCancerRiskOutput> {
+export async function predictCancerRisk(
+  input: PredictCancerRiskInput
+): Promise<PredictCancerRiskOutput> {
+  const { imageDataUri, cancerType } = input;
+  
+  // Configuration for the Vertex AI endpoint
+  const project = process.env.GCLOUD_PROJECT || 'oncodetect-ai';
+  const location = 'us-central1';
+  const endpointId = '5381831701358313472'; // Your specific endpoint ID for the model
+
+  const clientOptions = {
+    apiEndpoint: `${location}-aiplatform.googleapis.com`,
+  };
+
+  const predictionServiceClient = new PredictionServiceClient(clientOptions).getPredictionServiceClient();
+  const endpoint = `projects/${project}/locations/${location}/endpoints/${endpointId}`;
+  
+  const imageBase64 = imageDataUri.split(';base64,').pop();
+
+  const instance = {
+    content: imageBase64,
+  };
+  const instances = [instance];
+  const request = {
+    endpoint,
+    instances,
+  };
+
   try {
-    const { output } = await ai.generate({
-        model: vertexAI.model('custom-oral-cancer-model'),
-        prompt: [
-          { media: { url: input.imageDataUri } }
-        ]
-    });
-
-    if (!output || typeof output !== 'object') {
-        throw new Error('Invalid model output from Vertex AI. Expected an object.');
-    }
+    const [response] = await predictionServiceClient.predict(request);
     
-    // The output from a custom model prediction is often a structure.
-    // We need to access the 'predictions' key which contains the array of probabilities.
-    const rawPredictions = (output as any).predictions;
-    
-    if (!rawPredictions || !Array.isArray(rawPredictions) || rawPredictions.length === 0) {
-      throw new Error('Invalid prediction format in model output.');
+    if (!response.predictions || response.predictions.length === 0) {
+      throw new Error('Invalid response from Vertex AI: No predictions found.');
     }
 
-    const predictions = rawPredictions[0] as number[];
-    const confidenceScore = Math.max(...predictions);
-    const predictedClassIndex = predictions.indexOf(confidenceScore);
+    const predictionResult = response.predictions[0] as any;
     
-    // Assumes class 1 is 'High Risk' and class 0 is 'Low Risk'
-    const riskAssessment = predictedClassIndex === 1 ? 'High Risk' : 'Low Risk';
+    // The structure can be { confidences: [0.1, 0.9], displayNames: ["Low", "High"] }
+    // We find the index of the max confidence and map it to the risk assessment
+    const confidences = predictionResult.confidences as number[];
+    const displayNames = predictionResult.displayNames as string[];
+
+    const confidenceScore = Math.max(...confidences);
+    const predictedClassIndex = confidences.indexOf(confidenceScore);
+    const riskAssessment = displayNames[predictedClassIndex];
 
     return {
       riskAssessment,
       confidenceScore,
-      cancerType: input.cancerType,
+      cancerType: cancerType,
     };
   } catch (e: any) {
-    console.error('Error in predictCancerRisk flow:', e);
+    console.error('Error in predictCancerRisk flow (Vertex AI SDK):', e);
     return {
       riskAssessment: '',
       confidenceScore: 0,
-      cancerType: input.cancerType,
-      error: 'Analysis failed: The AI model could not be reached or returned an error.',
+      cancerType: cancerType,
+      error:
+        'Analysis failed: The AI model could not be reached or returned an error.',
     };
   }
 }
