@@ -27,14 +27,12 @@ import { useToast } from "@/hooks/use-toast";
 import { ResultsDisplay } from "./results-display";
 import Image from "next/image";
 
-// This type should match the expected output from your new API route
 export type PredictCancerRiskOutput = {
   riskAssessment: string;
   confidenceScore: number;
-  cancerType: string;
+  cancerType: string; // We'll add this back on the client-side
   error?: string;
 };
-
 
 const MAX_FILE_SIZE = 5000000; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg"];
@@ -45,14 +43,13 @@ const formSchema = z.object({
   cancerType: z.string().min(1, "Please select a cancer type."),
   imageType: z.string().min(1, "Please select an image type."),
   image: z
-    .any()
-    .refine((files) => files?.length == 1, "Image is required.")
+    .instanceof(File, { message: "Image is required." })
     .refine(
-      (files) => files?.[0]?.size <= MAX_FILE_SIZE,
+      (file) => file.size <= MAX_FILE_SIZE,
       `Max file size is 5MB.`
     )
     .refine(
-      (files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
+      (file) => ACCEPTED_IMAGE_TYPES.includes(file.type),
       "Only .jpeg files are accepted."
     ),
 });
@@ -72,32 +69,34 @@ export function AnalysisForm() {
     },
   });
 
-  const toBase64 = (file: File): Promise<string> =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-    });
-
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     setResult(null);
+
+    const PREDICTION_API_URL = process.env.NEXT_PUBLIC_PREDICTION_API_URL;
+
+    if (!PREDICTION_API_URL) {
+      console.error('NEXT_PUBLIC_PREDICTION_API_URL is not set.');
+      toast({
+        variant: "destructive",
+        title: "Configuration Error",
+        description: "The prediction service URL is not configured.",
+      });
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      const imageDataUri = await toBase64(values.image[0]);
+      const formData = new FormData();
+      formData.append('image', values.image);
+      formData.append('image_type', values.imageType);
       
-      const response = await fetch('/api/predict', {
+      const response = await fetch(PREDICTION_API_URL, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          imageDataUri: imageDataUri,
-          imageType: values.imageType, // Pass the new imageType
-        }),
+        body: formData, // Send as multipart/form-data
       });
 
-      const responseData: PredictCancerRiskOutput = await response.json();
+      const responseData = await response.json();
 
       if (!response.ok || responseData.error) {
          toast({
@@ -105,9 +104,13 @@ export function AnalysisForm() {
           title: "Analysis Failed",
           description: responseData.error || "An unknown error occurred.",
         });
-        setResult(responseData); // Still set result to show error in results-display
+        setResult({
+            riskAssessment: "",
+            confidenceScore: 0,
+            cancerType: values.cancerType,
+            error: responseData.error || "An unknown error occurred.",
+        });
       } else {
-        // Add cancerType to the result as it's not returned from the python function
         setResult({ ...responseData, cancerType: values.cancerType });
       }
 
@@ -127,16 +130,14 @@ export function AnalysisForm() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Set the file in the form state
-      form.setValue('image', e.target.files, { shouldValidate: true });
-      // Create and set the image preview
+      form.setValue('image', file, { shouldValidate: true });
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
     } else {
-      form.setValue('image', null, { shouldValidate: true });
+      form.setValue('image', undefined, { shouldValidate: true });
       setImagePreview(null);
     }
   };
@@ -199,27 +200,24 @@ export function AnalysisForm() {
               <FormItem>
                 <FormLabel>Medical Image</FormLabel>
                 <FormControl>
-                  <label className="relative flex justify-center items-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
-                    <Input
-                      type="file"
-                      className="absolute w-full h-full opacity-0 cursor-pointer"
-                      accept={ACCEPTED_IMAGE_TYPES.join(",")}
-                      onChange={handleImageChange}
-                      onBlur={field.onBlur}
-                      name={field.name}
-                      ref={field.ref}
-                      disabled={!form.watch("cancerType")}
-                    />
-                    {imagePreview ? (
-                      <Image src={imagePreview} alt="Image preview" fill style={{objectFit: 'contain'}} className="rounded-lg p-2" />
-                    ) : (
-                      <div className="flex flex-col items-center justify-center text-muted-foreground text-center p-4">
-                        <Upload className="w-10 h-10 mb-2" />
-                        <p className="text-sm font-semibold">Click to upload or drag & drop</p>
-                        <p className="text-xs">JPEG only (MAX. 5MB)</p>
-                      </div>
-                    )}
-                  </label>
+                   <label className="relative flex justify-center items-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                      <Input
+                        type="file"
+                        className="absolute w-full h-full opacity-0 cursor-pointer"
+                        accept={ACCEPTED_IMAGE_TYPES.join(",")}
+                        onChange={handleImageChange}
+                        disabled={!form.watch("cancerType")}
+                      />
+                      {imagePreview ? (
+                        <Image src={imagePreview} alt="Image preview" fill style={{objectFit: 'contain'}} className="rounded-lg p-2" />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center text-muted-foreground text-center p-4">
+                          <Upload className="w-10 h-10 mb-2" />
+                          <p className="text-sm font-semibold">Click to upload or drag & drop</p>
+                          <p className="text-xs">JPEG only (MAX. 5MB)</p>
+                        </div>
+                      )}
+                    </label>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -235,3 +233,5 @@ export function AnalysisForm() {
     </>
   );
 }
+
+    

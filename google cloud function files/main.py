@@ -1,21 +1,20 @@
-
 import functions_framework
-import numpy as np
 import tensorflow as tf
-from PIL import Image
-import base64
-import io
+import numpy as np
+import json
 import os
 from google.cloud import storage
+from tensorflow import keras
+from sklearn.preprocessing import LabelEncoder
+import base64
+import io
+from PIL import Image
 
-# --- Configuration ---
-# Hardcoded bucket and model file path to ensure correctness.
-MODEL_FULL_PATH = "gs://sixai-cancer-models/oral_cervical_cancer_model.h5"
-# --------------------
-
-# This is a global variable to hold the model.
-# It's loaded once per function instance to be reused across invocations.
-model = None
+# Configuration
+BUCKET_NAME = 'sixai-cancer-models'
+MODEL_FILE = 'oral_cervical_cancer_model.h5'
+LOCAL_MODEL_PATH = '/tmp/' + MODEL_FILE
+IMG_SIZE = (224, 224)
 
 # Mapping from image type string to an integer index for the model
 TYPE_MAPPING = {
@@ -24,6 +23,8 @@ TYPE_MAPPING = {
   "Histopathology": 2,
   "Radiograph": 3
 }
+
+model = None
 
 def download_model_from_gcs(full_gcs_path):
     """Downloads the model from a full GCS path to a temporary local file."""
@@ -55,7 +56,8 @@ def load_model():
     global model
     if model is None:
         try:
-            local_path = download_model_from_gcs(MODEL_FULL_PATH)
+            full_model_path = f"gs://{BUCKET_NAME}/{MODEL_FILE}"
+            local_path = download_model_from_gcs(full_model_path)
             print("Loading model into memory...")
             model = tf.keras.models.load_model(local_path, compile=False)
             print("Model loaded successfully.")
@@ -63,15 +65,11 @@ def load_model():
             print(f"CRITICAL: Failed to load model. Error: {e}")
             model = None
 
-# Load the model at startup
 load_model()
-
 
 @functions_framework.http
 def predict(request):
-    """
-    HTTP Cloud Function to predict cancer risk from an image and its type.
-    """
+    """HTTP Cloud Function for prediction."""
     headers = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -82,21 +80,19 @@ def predict(request):
 
     if not model:
         print("Error: Model is not loaded. Cannot process prediction.")
-        return ({'error': 'Analysis failed: The AI model is not available. Please check the function logs for loading errors.'}, 503, headers)
+        return ({'error': 'Analysis failed: The AI model is not available. Please check the function logs.'}, 503, headers)
 
-    request_json = request.get_json(silent=True)
-    if not request_json or 'imageDataUri' not in request_json or 'imageType' not in request_json:
-        return ({'error': 'Invalid request payload. Missing "imageDataUri" or "imageType".'}, 400, headers)
-    
-    image_data_uri = request_json['imageDataUri']
-    image_type_str = request_json['imageType']
-    
+    if 'image' not in request.files or 'image_type' not in request.form:
+        return ({'error': 'Missing image file or image_type in request'}, 400, headers)
+
+    image_file = request.files['image']
+    image_type_str = request.form['image_type']
+
     try:
         # 1. Preprocess the Image
-        header, encoded = image_data_uri.split(",", 1)
-        image_data = base64.b64decode(encoded)
+        image_data = image_file.read()
         image = Image.open(io.BytesIO(image_data)).convert('RGB')
-        img_resized = image.resize((224, 224))
+        img_resized = image.resize(IMG_SIZE)
         img_array = np.array(img_resized) / 255.0
         img_batch = np.expand_dims(img_array, axis=0) # Shape: [1, 224, 224, 3]
 
@@ -105,18 +101,15 @@ def predict(request):
             return ({'error': f'Invalid imageType: "{image_type_str}".'}, 400, headers)
         
         type_idx = TYPE_MAPPING[image_type_str]
-        # Create a tensor with shape [1] for the type index
         type_tensor = np.array([type_idx], dtype=np.int32)
 
-        # 3. Make Prediction using both inputs
-        print(f"Predicting with image and type index: {type_idx}")
-        # The model expects a list of inputs
+        # 3. Make Prediction
         prediction = model.predict([img_batch, type_tensor])
         
         confidence_score = float(np.max(prediction))
         predicted_class_index = int(np.argmax(prediction))
 
-        # 4. Format the Response
+        # 4. Format Response
         risk_assessment = 'High Risk' if predicted_class_index == 1 else 'Low Risk'
 
         response_data = {
@@ -127,6 +120,7 @@ def predict(request):
         return (response_data, 200, headers)
 
     except Exception as e:
-        print(f"Error during prediction processing: {e}")
-        return ({'error': f'An unexpected error occurred during processing or prediction.'}, 500, headers)
+        print(f"Prediction error: {e}")
+        return ({'error': f'An unexpected error occurred during prediction: {e}'}, 500, headers)
 
+    
