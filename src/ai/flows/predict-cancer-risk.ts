@@ -106,12 +106,12 @@ export async function predictCancerRisk(
     };
   } catch (e: any) {
     console.error('Error in predictCancerRisk flow (Vertex AI SDK):', e);
-    // Return the specific error message for foolproof troubleshooting
+    // Return a more user-friendly error
     return {
       riskAssessment: '',
       confidenceScore: 0,
       cancerType: cancerType,
-      error: `Analysis failed. Backend error: ${e.message || 'An unknown error occurred.'}`,
+      error: `Analysis failed. The AI model could not be reached or returned an error. This is likely a permissions issue. Please ensure the function's service account has the "Vertex AI User" role.`,
     };
   }
 }
