@@ -60,7 +60,7 @@ export function ResultsDisplay({ result }: ResultsDisplayProps) {
           <div className="flex flex-col md:flex-row justify-around items-center gap-6">
             <div className="space-y-2">
               <p className="text-sm font-medium text-muted-foreground">
-                Detected Condition
+                Diagnosis
               </p>
               <Badge
                 variant="outline"
@@ -80,11 +80,6 @@ export function ResultsDisplay({ result }: ResultsDisplayProps) {
                 {result.riskAssessment}
               </Badge>
             </div>
-          </div>
-          
-          <div className="text-left bg-muted/50 p-4 rounded-lg">
-            <p className="font-semibold text-foreground">Diagnosis Details:</p>
-            <p className="text-sm text-muted-foreground">{result.diagnosisDetail}</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 pt-4 text-left">
