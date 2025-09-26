@@ -115,8 +115,7 @@ def predict(request):
 
         response_data = {
             "riskAssessment": risk_assessment,
-            "confidenceScore": confidence_score,
-            "cancerType": "Oral Cancer", # This is hardcoded as the model is specific
+            "confidenceScore": confidence_score
         }
         
         return (response_data, 200, headers)
