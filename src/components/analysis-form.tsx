@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader2, Upload } from "lucide-react";
-import { analyzeMedicalDataForRisk, AnalyzeMedicalDataForRiskOutput } from "@/ai/flows/analyze-medical-data-for-risk";
+import { predictCancerRisk, PredictCancerRiskOutput } from "@/ai/flows/predict-cancer-risk";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +16,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { ResultsDisplay } from "./results-display";
@@ -23,8 +30,10 @@ import Image from "next/image";
 
 const MAX_FILE_SIZE = 5000000; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png"];
+const CANCER_TYPES = ["Oral Cancer", "Cervical Cancer"];
 
 const formSchema = z.object({
+  cancerType: z.string().min(1, "Please select a cancer type."),
   image: z
     .any()
     .refine((files) => files?.length == 1, "Image is required.")
@@ -40,13 +49,15 @@ const formSchema = z.object({
 
 export function AnalysisForm() {
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<AnalyzeMedicalDataForRiskOutput | null>(null);
+  const [result, setResult] = useState<PredictCancerRiskOutput | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {},
+    defaultValues: {
+      cancerType: "",
+    },
   });
 
   const toBase64 = (file: File): Promise<string> =>
@@ -62,11 +73,18 @@ export function AnalysisForm() {
     setResult(null);
     try {
       const imageDataUri = await toBase64(values.image[0]);
-      const response = await analyzeMedicalDataForRisk({
+      const response = await predictCancerRisk({
         imageDataUri,
-        name: "Patient", // Name is no longer used in the backend but the flow expects it.
+        cancerType: values.cancerType,
       });
       setResult(response);
+      if (response.error) {
+         toast({
+          variant: "destructive",
+          title: "Analysis Failed",
+          description: response.error,
+        });
+      }
     } catch (error) {
       console.error("Analysis failed:", error);
       toast({
@@ -98,7 +116,29 @@ export function AnalysisForm() {
   return (
     <>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <FormField
+            control={form.control}
+            name="cancerType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Cancer Type</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a cancer type to analyze" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {CANCER_TYPES.map((type) => (
+                      <SelectItem key={type} value={type}>{type}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <FormField
             control={form.control}
             name="image"
@@ -112,6 +152,7 @@ export function AnalysisForm() {
                       className="absolute w-full h-full opacity-0 cursor-pointer"
                       accept={ACCEPTED_IMAGE_TYPES.join(",")}
                       onChange={handleImageChange}
+                      disabled={!form.watch("cancerType")}
                     />
                     {imagePreview ? (
                       <Image src={imagePreview} alt="Image preview" fill style={{objectFit: 'contain'}} className="rounded-lg p-2" />
@@ -128,7 +169,7 @@ export function AnalysisForm() {
               </FormItem>
             )}
           />
-          <Button type="submit" size="lg" className="w-full" disabled={isLoading}>
+          <Button type="submit" size="lg" className="w-full" disabled={isLoading || !form.formState.isValid}>
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Analyze
           </Button>

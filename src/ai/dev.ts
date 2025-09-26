@@ -1,4 +1,4 @@
 import { config } from 'dotenv';
 config();
 
-import '@/ai/flows/analyze-medical-data-for-risk.ts';
+import '@/ai/flows/predict-cancer-risk.ts';

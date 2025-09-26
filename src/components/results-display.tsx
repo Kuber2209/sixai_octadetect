@@ -1,12 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import type { AnalyzeMedicalDataForRiskOutput } from "@/ai/flows/analyze-medical-data-for-risk";
+import type { PredictCancerRiskOutput } from "@/ai/flows/predict-cancer-risk";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { AlertCircle } from "lucide-react";
 
 interface ResultsDisplayProps {
-  result: AnalyzeMedicalDataForRiskOutput;
+  result: PredictCancerRiskOutput;
 }
 
 export function ResultsDisplay({ result }: ResultsDisplayProps) {
