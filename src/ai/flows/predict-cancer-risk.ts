@@ -10,6 +10,7 @@
 import { z } from 'genkit';
 import {
   PredictionServiceClient,
+  helpers,
 } from '@google-cloud/aiplatform';
 
 // Define the input schema for our flow
@@ -56,9 +57,19 @@ export async function predictCancerRisk(
   
   const imageBase64 = imageDataUri.split(';base64,').pop();
 
-  const instance = {
+  const instance = helpers.toValue({
     content: imageBase64,
-  };
+  });
+  
+  if (!instance) {
+     return {
+      riskAssessment: '',
+      confidenceScore: 0,
+      cancerType: cancerType,
+      error: 'Failed to create instance for Vertex AI model.',
+    };
+  }
+  
   const instances = [instance];
   const request = {
     endpoint,
@@ -72,7 +83,7 @@ export async function predictCancerRisk(
       throw new Error('Invalid response from Vertex AI: No predictions found.');
     }
 
-    const predictionResult = response.predictions[0] as any;
+    const predictionResult = helpers.fromValue(response.predictions[0]);
     
     // The structure can be { confidences: [0.1, 0.9], displayNames: ["Low", "High"] }
     // We find the index of the max confidence and map it to the risk assessment
