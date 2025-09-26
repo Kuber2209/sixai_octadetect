@@ -18,14 +18,14 @@ export const DEMO_RESULTS: DemoResult[] = [
   {
     patientName: 'Jane Smith',
     cancerType: 'Oral Cancer',
-    riskAssessment: 'Medium Risk',
+    riskAssessment: 'High Risk',
     sensitivity: 0.99,
     specificity: 0.98,
   },
   {
     patientName: 'Robert Johnson',
     cancerType: 'Oral Cancer',
-    riskAssessment: 'Low Risk',
+    riskAssessment: 'High Risk',
     sensitivity: 0.99,
     specificity: 0.99,
   },
@@ -39,7 +39,7 @@ export const DEMO_RESULTS: DemoResult[] = [
   {
     patientName: 'Michael Brown',
     cancerType: 'Oral Cancer',
-    riskAssessment: 'Low Risk',
+    riskAssessment: 'High Risk',
     sensitivity: 0.99,
     specificity: 0.99,
   }
