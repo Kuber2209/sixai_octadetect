@@ -65,6 +65,7 @@ export function AnalysisForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       cancerType: "Oral Cancer",
+      image: undefined,
     },
   });
 
@@ -119,7 +120,7 @@ export function AnalysisForm() {
     }
   }
   
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, fieldChange: (files: FileList | null) => void) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -127,11 +128,10 @@ export function AnalysisForm() {
         setImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
-      // Also pass it to react-hook-form
-      form.setValue("image", e.target.files, { shouldValidate: true });
+      fieldChange(e.target.files);
     } else {
       setImagePreview(null);
-      form.setValue("image", null, { shouldValidate: true });
+      fieldChange(null);
     }
   };
 
@@ -165,7 +165,7 @@ export function AnalysisForm() {
           <FormField
             control={form.control}
             name="image"
-            render={() => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel>Medical Image</FormLabel>
                 <FormControl>
@@ -174,7 +174,10 @@ export function AnalysisForm() {
                       type="file"
                       className="absolute w-full h-full opacity-0 cursor-pointer"
                       accept={ACCEPTED_IMAGE_TYPES.join(",")}
-                      onChange={handleImageChange}
+                      onChange={(e) => handleImageChange(e, field.onChange)}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      ref={field.ref}
                       disabled={!form.watch("cancerType")}
                     />
                     {imagePreview ? (
