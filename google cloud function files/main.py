@@ -1,3 +1,4 @@
+
 import functions_framework
 import numpy as np
 import tensorflow as tf
@@ -125,3 +126,4 @@ def predict(request):
         print(f"Error during prediction processing: {e}")
         # Return a generic but informative error to the client
         return ({'error': f'An unexpected error occurred during image processing or prediction. Please check if the image format is correct.'}, 500, headers)
+
