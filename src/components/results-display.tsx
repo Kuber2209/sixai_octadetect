@@ -100,7 +100,6 @@ export function ResultsDisplay({ result }: ResultsDisplayProps) {
                   {(result.sensitivity * 100).toFixed(0)}%
                 </span>
               </div>
-              <p className="text-xs text-muted-foreground">The model's ability to correctly identify true positive cases.</p>
             </div>
 
             <div className="space-y-3">
@@ -120,7 +119,6 @@ export function ResultsDisplay({ result }: ResultsDisplayProps) {
                   {(result.specificity * 100).toFixed(0)}%
                 </span>
               </div>
-              <p className="text-xs text-muted-foreground">The model's ability to correctly identify true negative cases.</p>
             </div>
           </div>
         </CardContent>
