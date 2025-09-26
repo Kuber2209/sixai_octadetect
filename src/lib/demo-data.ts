@@ -1,4 +1,5 @@
 export type DemoResult = {
+  patientName: string;
   cancerType: string;
   riskAssessment: 'Low Risk' | 'Medium Risk' | 'High Risk';
   sensitivity: number;
@@ -9,6 +10,7 @@ export type DemoResult = {
 
 export const DEMO_RESULTS: DemoResult[] = [
   {
+    patientName: 'John Doe',
     cancerType: 'Oral Squamous Cell Carcinoma',
     riskAssessment: 'High Risk',
     sensitivity: 0.98,
@@ -16,6 +18,7 @@ export const DEMO_RESULTS: DemoResult[] = [
     diagnosisDetail: 'Analysis indicates atypical squamous cells with features highly suggestive of malignancy. Irregular cell clusters and high nucleus-to-cytoplasm ratio observed.',
   },
   {
+    patientName: 'Jane Smith',
     cancerType: 'Cervical Intraepithelial Neoplasia (CIN 2)',
     riskAssessment: 'Medium Risk',
     sensitivity: 0.99,
@@ -23,6 +26,7 @@ export const DEMO_RESULTS: DemoResult[] = [
     diagnosisDetail: 'Moderate dysplasia detected. Abnormal cell growth is confined to the basal two-thirds of the epithelium. Close monitoring and follow-up are recommended.',
   },
   {
+    patientName: 'Robert Johnson',
     cancerType: 'Benign Leukoplakia',
     riskAssessment: 'Low Risk',
     sensitivity: 0.99,
@@ -30,6 +34,7 @@ export const DEMO_RESULTS: DemoResult[] = [
     diagnosisDetail: 'Image analysis shows thickened epithelial tissue, consistent with benign hyperkeratosis. No signs of malignant transformation are currently visible.',
   },
   {
+    patientName: 'Emily Williams',
     cancerType: 'Oral Melanoma',
     riskAssessment: 'High Risk',
     sensitivity: 0.98,
@@ -37,6 +42,7 @@ export const DEMO_RESULTS: DemoResult[] = [
     diagnosisDetail: 'Atypical melanocytes with irregular pigmentation and morphology are present. The pattern is highly indicative of a malignant melanoma.',
   },
   {
+    patientName: 'Michael Brown',
     cancerType: 'HPV-Negative Cells',
     riskAssessment: 'Low Risk',
     sensitivity: 0.99,

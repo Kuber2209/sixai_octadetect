@@ -24,6 +24,7 @@ const MAX_FILE_SIZE = 5000000; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 const formSchema = z.object({
+  patientName: z.string().min(2, { message: "Name must be at least 2 characters." }),
   image: z
     .instanceof(File, { message: "An image is required." })
     .refine(
@@ -44,6 +45,7 @@ export function AnalysisForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      patientName: "",
       image: undefined,
     },
   });
@@ -55,9 +57,10 @@ export function AnalysisForm() {
     // Simulate API call delay
     await new Promise((resolve) => setTimeout(resolve, 1500));
     
-    // Select a random result from the demo data
-    const randomResult = DEMO_RESULTS[Math.floor(Math.random() * DEMO_RESULTS.length)];
-    setResult(randomResult);
+    // Select a random result from the demo data and merge with patient name
+    const randomResultTemplate = DEMO_RESULTS[Math.floor(Math.random() * DEMO_RESULTS.length)];
+    const finalResult = { ...randomResultTemplate, patientName: values.patientName };
+    setResult(finalResult);
 
     setIsLoading(false);
   }
@@ -81,6 +84,20 @@ export function AnalysisForm() {
     <>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <FormField
+            control={form.control}
+            name="patientName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Patient Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter patient's name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <FormField
             control={form.control}
             name="image"
@@ -112,7 +129,7 @@ export function AnalysisForm() {
           />
           <Button type="submit" size="lg" className="w-full" disabled={isLoading || !form.formState.isValid}>
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Run Demo Analysis
+            Analyze
           </Button>
         </form>
       </Form>

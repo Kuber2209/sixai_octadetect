@@ -52,7 +52,7 @@ export function ResultsDisplay({ result }: ResultsDisplayProps) {
       <Card className="border-primary/20">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-headline">
-            Analysis Results
+            Analysis Results for {result.patientName}
           </CardTitle>
           <CardDescription>This is a simulated result for demonstration purposes.</CardDescription>
         </CardHeader>
