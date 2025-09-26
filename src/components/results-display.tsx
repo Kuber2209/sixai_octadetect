@@ -1,19 +1,13 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Target, ShieldCheck } from "lucide-react";
+import type { DemoResult } from "@/lib/demo-data";
 
-// This type should match the expected output from your API route
-export type PredictCancerRiskOutput = {
-  riskAssessment: string;
-  confidenceScore: number;
-  cancerType: string;
-  error?: string;
-};
 
 interface ResultsDisplayProps {
-  result: PredictCancerRiskOutput;
+  result: DemoResult;
 }
 
 export function ResultsDisplay({ result }: ResultsDisplayProps) {
@@ -38,27 +32,35 @@ export function ResultsDisplay({ result }: ResultsDisplayProps) {
 
   const isHighRisk = result.riskAssessment.toLowerCase().includes("high");
   const isMediumRisk = result.riskAssessment.toLowerCase().includes("medium");
-  const confidenceValue = result.confidenceScore * 100;
+  const isLowRisk = result.riskAssessment.toLowerCase().includes("low");
 
   const getRiskVariant = () => {
     if (isHighRisk) return "destructive";
     if (isMediumRisk) return "secondary";
     return "default";
   }
+  
+  const getRiskColor = () => {
+    if (isHighRisk) return "text-destructive";
+    if (isMediumRisk) return "text-yellow-600 dark:text-yellow-400";
+    if (isLowRisk) return "text-primary";
+    return "text-foreground";
+  }
 
   return (
     <div className="mt-12 animate-in fade-in-50 duration-500">
       <Card className="border-primary/20">
-        <CardHeader>
-          <CardTitle className="text-2xl text-center font-headline">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl font-headline">
             Analysis Results
           </CardTitle>
+          <CardDescription>This is a simulated result for demonstration purposes.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6 text-center">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <CardContent className="space-y-8 text-center">
+          <div className="flex flex-col md:flex-row justify-around items-center gap-6">
             <div className="space-y-2">
               <p className="text-sm font-medium text-muted-foreground">
-                Cancer Type
+                Detected Condition
               </p>
               <Badge
                 variant="outline"
@@ -79,18 +81,51 @@ export function ResultsDisplay({ result }: ResultsDisplayProps) {
               </Badge>
             </div>
           </div>
-          <div className="space-y-2 pt-4">
-            <p className="text-sm font-medium text-muted-foreground">
-              Confidence Score
-            </p>
-            <div className="flex items-center justify-center gap-4">
-              <Progress
-                value={confidenceValue}
-                className="w-3/4 mx-auto h-3"
-              />
-              <span className="font-bold text-lg tabular-nums">
-                {confidenceValue.toFixed(0)}%
-              </span>
+          
+          <div className="text-left bg-muted/50 p-4 rounded-lg">
+            <p className="font-semibold text-foreground">Diagnosis Details:</p>
+            <p className="text-sm text-muted-foreground">{result.diagnosisDetail}</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 pt-4 text-left">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-blue-500"/>
+                  <p className="text-md font-medium text-muted-foreground">
+                    Sensitivity
+                  </p>
+              </div>
+              <div className="flex items-center justify-start gap-4">
+                <Progress
+                  value={result.sensitivity * 100}
+                  className="w-full h-3"
+                  indicatorClassName="bg-blue-500"
+                />
+                <span className="font-bold text-lg tabular-nums text-blue-500">
+                  {(result.sensitivity * 100).toFixed(0)}%
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">The model's ability to correctly identify true positive cases.</p>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                  <Target className="w-5 h-5 text-green-500"/>
+                  <p className="text-md font-medium text-muted-foreground">
+                    Specificity
+                  </p>
+              </div>
+              <div className="flex items-center justify-start gap-4">
+                <Progress
+                  value={result.specificity * 100}
+                  className="w-full h-3"
+                  indicatorClassName="bg-green-500"
+                />
+                <span className="font-bold text-lg tabular-nums text-green-500">
+                  {(result.specificity * 100).toFixed(0)}%
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">The model's ability to correctly identify true negative cases.</p>
             </div>
           </div>
         </CardContent>
@@ -98,3 +133,6 @@ export function ResultsDisplay({ result }: ResultsDisplayProps) {
     </div>
   );
 }
+
+// Re-exporting the type for use in analysis-form
+export type { DemoResult } from "@/lib/demo-data";
