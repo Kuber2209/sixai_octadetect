@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Toaster } from '@/components/ui/toaster';
 import './globals.css';
+import { app } from '@/lib/firebase'; // Import app to initialize firebase
 
 export const metadata: Metadata = {
   title: 'OncoDetect AI',
