@@ -1,12 +1,13 @@
 import {genkit} from 'genkit';
 import {googleAI} from '@genkit-ai/googleai';
-import {vertexAI, visionModel} from '@genkit-ai/vertexai';
+import {vertexAI} from '@genkit-ai/vertexai';
 
-const oncodetectModel = visionModel({
+const oncodetectModel = {
   name: 'custom-oral-cancer-model',
   type: 'custom',
-  model: 'projects/oncodetect-ai/locations/us-central1/endpoints/5381831701358313472',
-});
+  model:
+    'projects/oncodetect-ai/locations/us-central1/endpoints/5381831701358313472',
+};
 
 export const ai = genkit({
   plugins: [googleAI(), vertexAI({models: [oncodetectModel]})],
