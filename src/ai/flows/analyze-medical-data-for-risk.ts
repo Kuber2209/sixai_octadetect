@@ -15,7 +15,6 @@ const AnalyzeMedicalDataForRiskInputSchema = z.object({
     .describe(
       "A medical image as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
-  name: z.string().describe("The patient's name (no longer used but kept for compatibility)."),
 });
 export type AnalyzeMedicalDataForRiskInput = z.infer<typeof AnalyzeMedicalDataForRiskInputSchema>;
 
