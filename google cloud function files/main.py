@@ -9,10 +9,9 @@ import os
 from google.cloud import storage
 
 # --- Configuration ---
-# The bucket and model file path will be loaded from environment variables
-# Fallback to defaults if not set.
-BUCKET_NAME = os.environ.get("BUCKET_NAME", "sixai-cancer-models")
-MODEL_FILE_PATH = os.environ.get("MODEL_FILE_PATH", "oral_cervical_cancer_model.h5")
+# Hardcoded bucket and model file path to ensure correctness.
+BUCKET_NAME = "sixai-cancer-models"
+MODEL_FILE_PATH = "oral_cervical_cancer_model.h5"
 # --------------------
 
 # This is a global variable to hold the model.
@@ -126,4 +125,3 @@ def predict(request):
         print(f"Error during prediction processing: {e}")
         # Return a generic but informative error to the client
         return ({'error': f'An unexpected error occurred during image processing or prediction. Please check if the image format is correct.'}, 500, headers)
-
