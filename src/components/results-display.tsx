@@ -56,9 +56,9 @@ export function ResultsDisplay({ result }: ResultsDisplayProps) {
           </CardTitle>
           <CardDescription>This is a simulated result for demonstration purposes.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-8 text-center">
-          <div className="flex flex-col md:flex-row justify-around items-center gap-6">
-            <div className="space-y-2">
+        <CardContent className="space-y-8">
+          <div className="flex flex-col md:flex-row justify-center items-center gap-6 md:gap-12">
+            <div className="space-y-2 text-center">
               <p className="text-sm font-medium text-muted-foreground">
                 Diagnosis
               </p>
@@ -69,7 +69,7 @@ export function ResultsDisplay({ result }: ResultsDisplayProps) {
                 {result.cancerType}
               </Badge>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 text-center">
               <p className="text-sm font-medium text-muted-foreground">
                 Risk Assessment
               </p>
