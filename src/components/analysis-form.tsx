@@ -24,7 +24,7 @@ const MAX_FILE_SIZE = 5000000; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 const formSchema = z.object({
-  patientName: z.string().min(2, { message: "Name must be at least 2 characters." }),
+  patientName: z.string().min(2, { message: "ID must be at least 2 characters." }),
   image: z
     .instanceof(File, { message: "An image is required." })
     .refine(
@@ -89,9 +89,9 @@ export function AnalysisForm() {
             name="patientName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Patient Name</FormLabel>
+                <FormLabel>ABHA ID</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter patient's name" {...field} />
+                  <Input placeholder="Enter patient's ABHA ID" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
