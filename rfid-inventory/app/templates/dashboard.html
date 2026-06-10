@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RFID Inventory — Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1>RFID Inventory</h1>
+    <div class="header-right">
+      <span id="ws-status" class="badge badge-off" title="Live link">offline</span>
+      <span id="who"></span>
+      <button id="logout" class="ghost">Logout</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="summary" class="cards">
+      <div class="card"><span class="num" id="s-total">–</span>Total items</div>
+      <div class="card ok"><span class="num" id="s-present">–</span>Present</div>
+      <div class="card warn"><span class="num" id="s-checked">–</span>Checked out</div>
+      <div class="card bad"><span class="num" id="s-missing">–</span>Missing</div>
+      <div class="card bad"><span class="num" id="s-alerts">–</span>Open alerts</div>
+    </section>
+
+    <div class="columns">
+      <section class="panel grow">
+        <div class="panel-head">
+          <h2>Live inventory</h2>
+          <div class="filters">
+            <input id="f-search" placeholder="Search name or EPC">
+            <select id="f-status">
+              <option value="">All statuses</option>
+              <option value="present">Present</option>
+              <option value="checked-out">Checked out</option>
+              <option value="missing">Missing</option>
+            </select>
+            <select id="f-building"><option value="">All buildings</option></select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table id="items-table">
+            <thead><tr>
+              <th>Name</th><th>EPC</th><th>Category</th><th>Location</th>
+              <th>Status</th><th>Last seen</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <aside class="side">
+        <section class="panel">
+          <h2>Read rate <span class="muted">(reads/min, last hour)</span></h2>
+          <canvas id="rate-chart" width="360" height="140"></canvas>
+        </section>
+
+        <section class="panel">
+          <h2>Alerts</h2>
+          <ul id="alerts-list" class="list"></ul>
+        </section>
+
+        <section class="panel">
+          <h2>Recent checkouts</h2>
+          <ul id="checkouts-list" class="list"></ul>
+        </section>
+
+        <section class="panel" id="register-panel" hidden>
+          <h2>Register new item</h2>
+          <form id="register-form">
+            <div class="epc-row">
+              <input name="epc" id="r-epc" placeholder="EPC" required>
+              <button type="button" id="r-scan" class="ghost">Scan tag</button>
+            </div>
+            <input name="name" placeholder="Item name" required>
+            <input name="category" placeholder="Category">
+            <select name="location_id" id="r-location"><option value="">No location</option></select>
+            <label class="inline"><input type="checkbox" name="is_consumable"> Consumable</label>
+            <button type="submit">Register</button>
+            <p id="r-msg" class="muted"></p>
+          </form>
+        </section>
+      </aside>
+    </div>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
